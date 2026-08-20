@@ -499,4 +499,4 @@ function TxnSheet({ onClose, onSave }) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
 
-  const cats = Object.entries(TXN_CATS).filter(([k]) => type === "income
+  const cats = Object.entries(TXN_CATS).filter(([k]) => type === "income" ? k === "income" : k !== "income");
