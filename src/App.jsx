@@ -500,3 +500,176 @@ function TxnSheet({ onClose, onSave }) {
   const [note, setNote] = useState("");
 
   const cats = Object.entries(TXN_CATS).filter(([k]) => type === "income" ? k === "income" : k !== "income");
+return (
+    <Sheet title="Log a transaction" onClose={onClose}>
+      <div className="seg">
+        <button className={type === "expense" ? "on" : ""} onClick={() => { setType("expense"); setCategory("food"); }}>Expense</button>
+        <button className={type === "income" ? "on" : ""} onClick={() => { setType("income"); setCategory("income"); }}>Income</button>
+      </div>
+      <Field label="Amount">
+        <input inputMode="decimal" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
+      </Field>
+      <Field label="Category">
+        <div className="chip-grid">
+          {cats.map(([k, v]) => {
+            const Icon = v.icon;
+            return (
+              <button key={k} className={`chip ${category === k ? "on" : ""}`} onClick={() => setCategory(k)}>
+                <Icon size={14} /> {v.label}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <Field label="Note (optional)">
+        <input placeholder="What was it for?" value={note} onChange={e => setNote(e.target.value)} />
+      </Field>
+      <button
+        className="save-btn"
+        disabled={!amount || Number(amount) <= 0}
+        onClick={() => onSave({ type, category, amount: Number(amount), note, date: todayISO() })}
+      >
+        Save transaction
+      </button>
+    </Sheet>
+  );
+}
+
+function BillSheet({ onClose, onSave }) {
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("electricity");
+  const [amount, setAmount] = useState("");
+  const [dueDay, setDueDay] = useState("1");
+
+  return (
+    <Sheet title="Add a bill" onClose={onClose}>
+      <Field label="Bill name">
+        <input placeholder="e.g. Electric Co." value={name} onChange={e => setName(e.target.value)} />
+      </Field>
+      <Field label="Category">
+        <div className="chip-grid">
+          {Object.entries(BILL_ICONS).map(([k, v]) => {
+            const Icon = v.icon;
+            return (
+              <button key={k} className={`chip ${category === k ? "on" : ""}`} onClick={() => setCategory(k)}>
+                <Icon size={14} /> {v.label}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <div className="two-col">
+        <Field label="Amount">
+          <input inputMode="decimal" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
+        </Field>
+        <Field label="Due day">
+          <input inputMode="numeric" placeholder="1-31" value={dueDay} onChange={e => setDueDay(e.target.value)} />
+        </Field>
+      </div>
+      <button
+        className="save-btn"
+        disabled={!name || !amount}
+        onClick={() => onSave({ name, category, amount: Number(amount), dueDay: Number(dueDay) || 1 })}
+      >
+        Save bill
+      </button>
+    </Sheet>
+  );
+}
+
+function DebtSheet({ onClose, onSave }) {
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("creditcard");
+  const [balance, setBalance] = useState("");
+  const [original, setOriginal] = useState("");
+  const [rate, setRate] = useState("");
+  const [minPayment, setMinPayment] = useState("");
+
+  return (
+    <Sheet title="Add a loan or debt" onClose={onClose}>
+      <Field label="Name">
+        <input placeholder="e.g. Visa Card" value={name} onChange={e => setName(e.target.value)} />
+      </Field>
+      <Field label="Type">
+        <div className="chip-grid">
+          {Object.entries(DEBT_ICONS).map(([k, v]) => {
+            const Icon = v.icon;
+            return (
+              <button key={k} className={`chip ${category === k ? "on" : ""}`} onClick={() => setCategory(k)}>
+                <Icon size={14} /> {v.label}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <div className="two-col">
+        <Field label="Current balance">
+          <input inputMode="decimal" placeholder="0.00" value={balance} onChange={e => setBalance(e.target.value)} />
+        </Field>
+        <Field label="Original amount">
+          <input inputMode="decimal" placeholder="optional" value={original} onChange={e => setOriginal(e.target.value)} />
+        </Field>
+      </div>
+      <div className="two-col">
+        <Field label="Interest rate %">
+          <input inputMode="decimal" placeholder="0.0" value={rate} onChange={e => setRate(e.target.value)} />
+        </Field>
+        <Field label="Min payment / mo">
+          <input inputMode="decimal" placeholder="0.00" value={minPayment} onChange={e => setMinPayment(e.target.value)} />
+        </Field>
+      </div>
+      <button
+        className="save-btn"
+        disabled={!name || !balance}
+        onClick={() => onSave({
+          name, category,
+          balance: Number(balance),
+          original: Number(original) || Number(balance),
+          rate: Number(rate) || 0,
+          minPayment: Number(minPayment) || 0,
+        })}
+      >
+        Save debt
+      </button>
+    </Sheet>
+  );
+}
+
+function PaySheet({ debt, onClose, onSave }) {
+  const [amount, setAmount] = useState(debt ? String(debt.minPayment || "") : "");
+  if (!debt) return null;
+  return (
+    <Sheet title={`Pay ${debt.name}`} onClose={onClose}>
+      <p className="pay-context">Current balance: <strong>{fmt(debt.balance)}</strong></p>
+      <Field label="Payment amount">
+        <input inputMode="decimal" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
+      </Field>
+      <button
+        className="save-btn"
+        disabled={!amount || Number(amount) <= 0}
+        onClick={() => onSave(Number(amount))}
+      >
+        Log payment
+      </button>
+    </Sheet>
+  );
+}
+
+/* ---------------- misc ---------------- */
+
+function TabBtn({ active, onClick, Icon, label }) {
+  return (
+    <button className={`tab-btn ${active ? "active" : ""}`} onClick={onClick}>
+      <Icon size={19} strokeWidth={active ? 2.3 : 1.8} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function SectionHead({ title }) {
+  return <div className="section-head"><h2>{title}</h2></div>;
+}
+
+function EmptyState({ text }) {
+  return <div className="empty"><Sparkles size={20} /><p>{text}</p></div>;
+}
